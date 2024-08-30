@@ -1,22 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .constants import BLOOD_GROUP
+from .constants import BLOOD_GROUP, GENDER_TYPE
 
 
-# Create your models here.
-# class UserRegister(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     image = models.ImageField(
-#         upload_to="user/images/", default="user/images/default-user.png"
-#     )
-#     age = models.IntegerField()
-#     address = models.CharField(max_length=255)
-#     last_donation_date = models.DateField(null=True, blank=True)
-#     is_available = models.BooleanField(default=True)
-#     mobile_no = models.CharField(max_length=12)
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="user_profile"
+    )
+    mobile_number = models.CharField(max_length=12)
+    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP)
+    gender = models.CharField(max_length=10, choices=GENDER_TYPE, blank=True, null=True)
 
-#     def __str__(self):
-#         return f"{self.user.first_name} {self.user.last_name}"
+    def __str__(self):
+        return f"{self.user.username} Profile"
 
 
 class DonorProfile(models.Model):

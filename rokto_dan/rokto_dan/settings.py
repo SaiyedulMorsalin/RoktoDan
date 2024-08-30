@@ -24,12 +24,19 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = "saiyedulmorsalin.projects@gmail.com"
-EMAIL_HOST_PASSWORD = "igwahmmswsfhqabf"
+EMAIL_HOST_USER = env("EMAIL")
+EMAIL_HOST_PASSWORD = env("EMAIL_PASSWORD")
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-bzpo&_kph)s(achk1mpsl#dt499(-bp-n3@-(+)b^8%_&a&%^4"
 
+SECRET_KEY = env("SECRET_KEY")
+
+
+DATABASES = {
+    "default": dj_database_url.config(
+        default=env("DATABASE_URL"),
+    )
+}
 
 DEBUG = True
 
@@ -99,12 +106,12 @@ WSGI_APPLICATION = "rokto_dan.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 
 # Password validation

@@ -2,8 +2,8 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import DonorProfile
-from .constants import BLOOD_GROUP
+from .models import DonorProfile, UserProfile
+from .constants import BLOOD_GROUP, GENDER_TYPE
 
 
 # Serializer for the User model
@@ -13,9 +13,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "first_name", "last_name", "email"]
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(many=False)
+    gender = serializers.ChoiceField(choices=GENDER_TYPE)
+
+    class Meta:
+        model = UserProfile
+        fields = ["user", "mobile_number", "gender", "blood_group"]
+
+
 # Serializer for user registration, including validation for password confirmation
 class RegistrationSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
     mobile_number = serializers.CharField(max_length=12, required=True)
     blood_group = serializers.ChoiceField(choices=BLOOD_GROUP, required=True)
 
@@ -31,34 +40,47 @@ class RegistrationSerializer(serializers.ModelSerializer):
             "password",
             "confirm_password",
         ]
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
 
-    def save(self, **kwargs):
-        # Extract the data from validated_data
-        username = self.validated_data["username"]
-        first_name = self.validated_data["first_name"]
-        last_name = self.validated_data["last_name"]
-        email = self.validated_data["email"]
-        mobile_number = self.validated_data["mobile_number"]
-        blood_group = self.validated_data["blood_group"]
-        password = self.validated_data["password"]
-        password2 = self.validated_data["confirm_password"]
+    def validate(self, data):
+        """Ensure passwords match and email is unique."""
+        if data["password"] != data["confirm_password"]:
+            raise serializers.ValidationError({"password": "Passwords don't match."})
 
-        # Check if passwords match
-        if password != password2:
-            raise serializers.ValidationError({"error": "Passwords don't match"})
+        if User.objects.filter(email=data["email"]).exists():
+            raise serializers.ValidationError({"email": "Email already exists."})
 
-        # Check if the email is already registered
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({"error": "Email already exists"})
+        return data
 
-        # Create the User account
-        account = User(
-            username=username, email=email, first_name=first_name, last_name=last_name
+    def create(self, validated_data):
+        """Create a new user with the validated data."""
+        validated_data.pop(
+            "confirm_password"
+        )  # Remove confirm_password field as it's not part of the User model
+
+        # Extract fields for user creation
+        username = validated_data["username"]
+        first_name = validated_data["first_name"]
+        last_name = validated_data["last_name"]
+        email = validated_data["email"]
+        mobile_number = validated_data["mobile_number"]
+        blood_group = validated_data["blood_group"]
+        password = validated_data["password"]
+
+        # Create and save the user
+        user = User(
+            username=username, first_name=first_name, last_name=last_name, email=email
         )
-        account.set_password(password)
-        account.is_active = False  # Account is inactive until email verification
-        account.save()
-        return account
+        user.set_password(password)
+        user.is_active = False  # Account is inactive until email verification
+        user.save()
+
+        # You can handle custom fields like mobile_number and blood_group as needed
+        # Save them in a related model if not using User directly.
+
+        return user
 
 
 # Serializer for user login

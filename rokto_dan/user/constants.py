@@ -8,3 +8,4 @@ BLOOD_GROUP = [
     ("AB+", "AB+"),
     ("AB-", "AB-"),
 ]
+GENDER_TYPE = [("Male", "Male"), ("Female", "Female")]
